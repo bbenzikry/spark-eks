@@ -1,8 +1,9 @@
 # spark-on-eks
 
-![Logos](logos.png)
+![Logos](https://user-images.githubusercontent.com/1993348/91601148-d0b01b80-e971-11ea-9903-6299b2396499.png)
 
 Examples and custom spark images for working with the spark-on-k8s operator on AWS.
+
 Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore
 
 Note: Spark 2 images will not be updated, please see the [FAQ](#faq)
@@ -104,6 +105,6 @@ driver:
 
 ## FAQ
 
-- Where can I find a spark 2 build with Glue support?
+- Where can I find a Spark 2 build with Glue support?
   - As spark 2 becomes less and less relevant, I opted against the need to add glue support.
-    You can take a look [here](https://github.com/tinyclues/spark-glue-data-catalog/blob/master/build-spark.sh) for a reference implementation which you can add to the spark2 irsa [dockerfile](./irsa/spark2/spark2.Dockerfile)
+    You can take a look [here](https://github.com/tinyclues/spark-glue-data-catalog/blob/master/build-spark.sh) for a reference implementation which you can add to the Spark 2 dockerfile [dockerfile](./docker/spark2.Dockerfile)
