@@ -1,0 +1,10 @@
+#!/bin/bash
+# check pyspark
+SHA_IMG=${IMAGE_TEST/-latest/-$SOURCE_COMMIT}
+if [[ $IMAGE_NAME == *"pyspark"* ]]; then
+  BASE_IMG=${IMAGE_TEST/pyspark/spark}-$SOURCE_COMMIT
+  # Override build
+  docker build --build-arg base_img="$BASE_IMG" -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME" -t "$SHA_IMG" .
+else
+  docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME" -t "$SHA_IMG" .
+fi
