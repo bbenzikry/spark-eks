@@ -1,8 +1,10 @@
 ARG java_image_tag=8-jre-slim
 ARG spark_uid=185
 
+ARG BUILD_DATE
+ARG VCS_REF
+
 FROM python:3.7-slim-buster as builder
-LABEL maintainer="bbenzikry@gmail.com"
 
 # Build options
 ARG spark_version=3.0.0
@@ -85,6 +87,12 @@ ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${aws_java_
 RUN chmod 0644 aws-java-sdk-bundle*.jar
 
 FROM openjdk:8-jdk-slim as final
+LABEL maintainer="bbenzikry@gmail.com" \
+    org.label-schema.build-date=$BUILD_DATE \
+    org.label-schema.vcs-url="https://github.com/bbenzikry/spark-eks.git" \
+    org.label-schema.vcs-ref=$VCS_REF \
+    org.label-schema.schema-version="1.0.0"\
+    org.label-schema.version="0.0.1"
 
 # Copy spark + glue + hadoop from builder stage
 COPY --from=builder /spark /opt/spark

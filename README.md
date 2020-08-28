@@ -3,6 +3,9 @@
 ![Logos](logos.png)
 
 Examples and custom spark images for working with the spark-on-k8s operator on AWS.
+Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore
+
+Note: Spark 2 images will not be updated, please see the [FAQ](#faq)
 
 ![docker](https://img.shields.io/docker/automated/bbenzikry/spark-eks?style=plastic)
 ![build](https://img.shields.io/docker/build/bbenzikry/spark-eks?style=plastic)
@@ -69,7 +72,12 @@ metadata:
 - For pyspark, see [pyspark.Dockerfile](./docker/pyspark.Dockerfile)
 
 ```dockerfile
-FROM bbenzikry/spark-eks:3-irsa
+# spark3
+FROM bbenzikry/spark-eks:spark3-latest
+# source build
+FROM bbenzikry/spark-eks:spark3-edge-latest
+# pyspark
+
 ```
 
 ### Submit your spark application with IRSA support
