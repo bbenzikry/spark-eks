@@ -1,0 +1,4 @@
+[submodule "spark-on-k8s-operator"]
+	path = spark-on-k8s-operator
+	url = https://github.com/bbenzikry/spark-on-k8s-operator
+	branch = hive-subpath

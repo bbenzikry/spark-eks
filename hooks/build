@@ -7,10 +7,7 @@ if [[ $IMAGE_NAME == *"pyspark"* ]]; then
   docker build --build-arg base_img="$BASE_IMG" --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF="$SOURCE_REF" -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME" .
 else
   if [[ $IMAGE_NAME == *"operator"* ]]; then
-    git clone https://github.com/bbenzikry/spark-on-k8s-operator
-    cd "spark-on-k8s-operator" || exit
-    git checkout hive-subpath
-    docker build -t "$IMAGE_NAME" .
+    docker build -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME" .
   else
   # shellcheck disable=SC2046,SC2006
   docker build -f "$DOCKERFILE_PATH" --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF="$SOURCE_REF" -t "$IMAGE_NAME" .
