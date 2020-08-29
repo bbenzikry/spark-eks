@@ -1,13 +1,11 @@
 #!/bin/bash
 # check pyspark
 SOURCE_REF=$(git rev-parse --short HEAD)
-
-SHA_IMG=${IMAGE_NAME/-latest/-$SOURCE_REF}
 if [[ $IMAGE_NAME == *"pyspark"* ]]; then
   BASE_IMG=${IMAGE_NAME/pyspark/spark}-$SOURCE_REF
   # shellcheck disable=SC2046,SC2006
-  docker build --build-arg base_img="$BASE_IMG" --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF="$SOURCE_REF" -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME" -t "$SHA_IMG" .
+  docker build --build-arg base_img="$BASE_IMG" --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF="$SOURCE_REF" -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME" .
 else
   # shellcheck disable=SC2046,SC2006
-  docker build -f "$DOCKERFILE_PATH" --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF="$SOURCE_REF" -t "$IMAGE_NAME" -t "$SHA_IMG" .
+  docker build -f "$DOCKERFILE_PATH" --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF="$SOURCE_REF" -t "$IMAGE_NAME" .
 fi

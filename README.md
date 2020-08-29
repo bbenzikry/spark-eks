@@ -1,26 +1,29 @@
 # spark-on-eks
 
-![Logos](https://user-images.githubusercontent.com/1993348/91601148-d0b01b80-e971-11ea-9903-6299b2396499.png)
+<!-- markdownlint-disable MD033 -->
+<center>
+<img src="https://user-images.githubusercontent.com/1993348/91601148-d0b01b80-e971-11ea-9903-6299b2396499.png" width="921" height="186">
 
 Examples and custom spark images for working with the spark-on-k8s operator on AWS.
 
 Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore
 
-Note: Spark 2 images will not be updated, please see the [FAQ](#faq)
+**Note**: Spark 2 images will not be updated, please see the [FAQ](#faq)
+
+---
 
 ![docker](https://img.shields.io/docker/automated/bbenzikry/spark-eks?style=plastic)
 ![build](https://img.shields.io/docker/build/bbenzikry/spark-eks?style=plastic)
 
 ![spark2](https://img.shields.io/docker/v/bbenzikry/spark-eks/spark2-latest)
 ![pyspark2](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark2-latest)
-
 ![spark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/spark3-latest)
 ![pyspark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark3-latest)
-
 ![spark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/spark3-edge)
 ![pyspark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark3-edge)
-
 ![operator](https://img.shields.io/docker/v/bbenzikry/spark-eks/operator-latest)
+
+</center>
 
 ## Prerequisites
 
