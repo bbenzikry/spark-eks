@@ -2,7 +2,9 @@
 
 <!-- markdownlint-disable MD033 -->
 <center>
-<img src="https://user-images.githubusercontent.com/1993348/91601148-d0b01b80-e971-11ea-9903-6299b2396499.png" width="921" height="186">
+<a href="#">
+<img src="https://user-images.githubusercontent.com/1993348/91601148-d0b01b80-e971-11ea-9903-6299b2396499.png" width="921" height="165">
+</a>
 
 Examples and custom spark images for working with the spark-on-k8s operator on AWS.
 
@@ -19,15 +21,15 @@ Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore
 ![pyspark2](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark2-latest)
 ![spark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/spark3-latest)
 ![pyspark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark3-latest)
-![spark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/spark3-edge)
-![pyspark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark3-edge)
-![operator](https://img.shields.io/docker/v/bbenzikry/spark-eks/operator-latest)
+![spark3-edge](https://img.shields.io/docker/v/bbenzikry/spark-eks/spark3-edge)
+![pyspark3-edge](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark3-edge)
+![operator](https://img.shields.io/docker/v/bbenzikry/spark-eks/operator)
 
 </center>
 
 ## Prerequisites
 
-- Deploy [spark-on-k8s operator](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator) using the [helm chart](https://github.com/helm/charts/tree/master/incubator/sparkoperator) or with [flux](./flux/releases/operator.yaml) with the [patched operator](./docker/operator.Dockerfile) image
+- Deploy [spark-on-k8s operator](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator) using the [helm chart](https://github.com/helm/charts/tree/master/incubator/sparkoperator) or with [flux](./flux/releases/operator.yaml) using the [patched operator](https://github.com/bbenzikry/) image.
 
 > Note: Do not create the spark service account automatically as part of chart use
 
@@ -111,3 +113,5 @@ driver:
 - Where can I find a Spark 2 build with Glue support?
   - As spark 2 becomes less and less relevant, I opted against the need to add glue support.
     You can take a look [here](https://github.com/tinyclues/spark-glue-data-catalog/blob/master/build-spark.sh) for a reference implementation which you can add to the Spark 2 dockerfile [dockerfile](./docker/spark2.Dockerfile)
+- Why a patched operator image?
+  - Some PRs are still pending on the operator image. Once they are pushed through and properly tested, you can use them instead.
