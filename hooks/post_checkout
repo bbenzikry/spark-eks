@@ -1,3 +1,4 @@
 #!/bin/bash
 # update submodule
 git submodule update --init
+git pull --recurse-submodules
