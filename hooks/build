@@ -2,7 +2,7 @@
 # check pyspark
 SOURCE_REF=$(git rev-parse --short HEAD)
 if [[ $IMAGE_NAME == *"pyspark"* ]]; then
-  BASE_IMG=${IMAGE_NAME/pyspark/spark}-$SOURCE_REF
+  BASE_IMG="$DOCKER_REPO:spark-$SOURCE_REF"
   # shellcheck disable=SC2046,SC2006
   docker build --build-arg base_img="$BASE_IMG" --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` --build-arg VCS_REF="$SOURCE_REF" -f "$DOCKERFILE_PATH" -t "$IMAGE_NAME" .
 else

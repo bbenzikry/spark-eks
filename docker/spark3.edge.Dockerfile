@@ -59,6 +59,7 @@ RUN mvn clean package -DskipTests -pl -aws-glue-datacatalog-hive2-client
 RUN mkdir /jars && find /catalog -name "*.jar" -exec cp {} /jars \;
 
 # Spark
+WORKDIR /
 RUN git clone https://github.com/apache/spark
 
 # Uncomment for source
