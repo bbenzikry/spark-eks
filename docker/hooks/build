@@ -1,7 +1,7 @@
 #!/bin/bash
 # check pyspark
 SOURCE_REF=$(git rev-parse --short HEAD)
-SHA_TAG="${DOCKER_TAG/-latest/}-$SOURCE_COMMIT"
+SHA_TAG="${DOCKER_TAG/-latest/}-$SOURCE_REF"
 REAL_DOCKERPATH=${DOCKERFILE_PATH/\.\/docker\//}
 if [[ $IMAGE_NAME == *"pyspark"* ]]; then
   BASE_IMG="$DOCKER_REPO:spark-$SOURCE_REF"
