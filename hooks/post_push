@@ -1,4 +1,0 @@
-#!/bin/bash
-SHA_TAG="${DOCKER_TAG/-latest/}-$SOURCE_COMMIT"
-docker tag "$IMAGE_NAME" "$DOCKER_REPO:$SHA_IMG"
-docker push "$DOCKER_REPO:$SHA_TAG"
