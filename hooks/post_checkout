@@ -2,3 +2,5 @@
 # update submodule
 git submodule update --init
 git pull --recurse-submodules
+# Initialize hooks for fork
+mv operator_hooks ./spark-on-k8s-operator/hooks
