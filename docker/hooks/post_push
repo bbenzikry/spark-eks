@@ -4,7 +4,7 @@ docker tag "$IMAGE_NAME" "$DOCKER_REPO:$SHA_IMG"
 docker push "$DOCKER_REPO:$SHA_TAG"
 
 # Check if there's a chained build here ( for pyspark )
-if [[ $DOCKER_REPO=="spark-eks" ]]; then 
+if [[ $DOCKER_REPO == "spark-eks" ]]; then 
   if [[ $DOCKER_TAG != *"pyspark"* ]]; then
     # shellcheck disable=SC2001,SC2086
     PYSPARK_TAG="py${DOCKER_TAG}"
