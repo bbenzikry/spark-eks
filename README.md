@@ -29,7 +29,7 @@ Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore
 
 ## Prerequisites
 
-- Deploy [spark-on-k8s operator](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator) using the [helm chart](https://github.com/helm/charts/tree/master/incubator/sparkoperator) or with [flux](./flux/releases/operator.yaml) using the [patched operator](https://github.com/bbenzikry/) image.
+- Deploy [spark-on-k8s operator](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator) using the [helm chart](https://github.com/helm/charts/tree/master/incubator/sparkoperator) or with [flux](./flux/releases/operator.yaml) using the [patched operator](https://github.com/bbenzikry/spark-on-k8s-operator/tree/hive-subpath) image.
 
 > Note: Do not create the spark service account automatically as part of chart use
 
