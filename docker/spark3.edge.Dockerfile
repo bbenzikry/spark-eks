@@ -15,6 +15,7 @@ ARG spark_version=3.0.0
 ARG hive_version=2.3.7
 # Hadoop and SDK versions for IRSA support
 ARG hadoop_version=3.3.0
+ARG hadoop_major_version=${hadoop_version:0:1}
 ARG aws_java_sdk_version=1.11.797
 ARG jmx_prometheus_javaagent_version=0.12.0
 
@@ -62,9 +63,23 @@ RUN mkdir /jars && find /catalog -name "*.jar" -exec cp {} /jars \;
 WORKDIR /
 RUN git clone https://github.com/apache/spark
 
-# Uncomment for source
 WORKDIR /spark
+# We get local hive here, so no need to get specific jar
 RUN dev/make-distribution.sh --name custom-spark --pip -Pkubernetes -Phive -Phive-thriftserver -Phadoop-provided -Dhive.version=${hive_version}
+
+WORKDIR /spark/jars
+
+# Add updated guava
+RUN rm -f guava-14.0.1.jar
+ADD https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar .
+
+# Add GCS and BQ just in case
+ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-latest-hadoop${hadoop_major_version}.jar .
+ADD https://storage.googleapis.com/spark-lib/bigquery/spark-bigquery-latest.jar .
+
+# chmods
+RUN chmod 0644 guava-23.0.jar spark-bigquery-latest.jar gcs-connector-latest-hadoop${hadoop_major_version}.jar
+
 
 WORKDIR /
 # Hadoop

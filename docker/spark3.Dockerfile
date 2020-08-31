@@ -5,15 +5,17 @@ ARG BUILD_DATE
 ARG VCS_REF
 
 FROM python:3.7-slim-buster as builder
-
 # Build options
 ARG spark_version=3.0.0
+ARG scala_version=2.12
 # uncomment if you want the dev build
 # ARG spark_dev_version=v3.0.1-rc2
 # HIVE version for glue support
 ARG hive_version=2.3.7
 # Hadoop and SDK versions for IRSA support
 ARG hadoop_version=3.3.0
+# due to no substition
+ARG hadoop_major_version=3
 ARG aws_java_sdk_version=1.11.797
 ARG jmx_prometheus_javaagent_version=0.12.0
 
@@ -81,10 +83,28 @@ RUN mv hadoop-${hadoop_version} hadoop
 # Delete unnecessary hadoop documentation
 RUN rm -rf hadoop/share/doc
 
+WORKDIR /spark/jars
+# Copy patched hive jar to distro
+RUN cp /hive/ql/target/hive-exec-${hive_version}.jar .
+
+ADD https://repo1.maven.org/maven2/org/apache/spark/spark-hive_${scala_version}/${spark_version}/spark-hive_${scala_version}-${spark_version}.jar .
+
+# Add updated guava
+RUN rm -f guava-14.0.1.jar
+ADD https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar .
+
+# Add GCS and BQ just in case
+ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-latest-hadoop${hadoop_major_version}.jar .
+ADD https://storage.googleapis.com/spark-lib/bigquery/spark-bigquery-latest.jar .
+
+# chmods
+RUN chmod 0644 guava-23.0.jar spark-hive_${scala_version}-${spark_version}.jar spark-bigquery-latest.jar gcs-connector-latest-hadoop${hadoop_major_version}.jar
+
 WORKDIR /hadoop/share/hadoop/tools/lib
 RUN rm ./aws-java-sdk-bundle-*.jar
 ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${aws_java_sdk_version}/aws-java-sdk-bundle-${aws_java_sdk_version}.jar .
 RUN chmod 0644 aws-java-sdk-bundle*.jar
+
 
 FROM openjdk:8-jdk-slim as final
 LABEL maintainer="bbenzikry@gmail.com" \
@@ -127,6 +147,7 @@ ENV HADOOP_HOME /opt/hadoop
 ENV SPARK_DIST_CLASSPATH="$HADOOP_HOME/etc/hadoop:$HADOOP_HOME/share/hadoop/common/lib/*:$HADOOP_HOME/share/hadoop/common/*:$HADOOP_HOME/share/hadoop/hdfs:$HADOOP_HOME/share/hadoop/hdfs/lib/*:$HADOOP_HOME/share/hadoop/hdfs/*:$HADOOP_HOME/share/hadoop/yarn:$HADOOP_HOME/share/hadoop/yarn/lib/*:$HADOOP_HOME/share/hadoop/yarn/*:$HADOOP_HOME/share/hadoop/mapreduce/lib/*:$HADOOP_HOME/share/hadoop/mapreduce/*:/contrib/capacity-scheduler/*.jar:$HADOOP_HOME/share/hadoop/tools/lib/*"
 ENV SPARK_EXTRA_CLASSPATH="$SPARK_DIST_CLASSPATH"
 ENV LD_LIBRARY_PATH /lib64
+
 
 WORKDIR /opt/spark/work-dir
 RUN chmod g+w /opt/spark/work-dir

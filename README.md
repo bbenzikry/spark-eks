@@ -3,7 +3,7 @@
 <!-- markdownlint-disable MD033 -->
 <center>
 <a href="#">
-<img src="https://user-images.githubusercontent.com/1993348/91601148-d0b01b80-e971-11ea-9903-6299b2396499.png" width="921" height="165">
+<img src="https://user-images.githubusercontent.com/1993348/91601148-d0b01b80-e971-11ea-9903-6299b2396499.png" width="100%" height="50%">
 </a>
 
 Examples and custom spark images for working with the spark-on-k8s operator on AWS.
@@ -14,24 +14,23 @@ Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore
 
 ---
 
-![docker](https://img.shields.io/docker/automated/bbenzikry/spark-eks?style=plastic)
-![build](https://img.shields.io/docker/build/bbenzikry/spark-eks?style=plastic)
-
-![spark2](https://img.shields.io/docker/v/bbenzikry/spark-eks/spark2-latest)
-![pyspark2](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark2-latest)
-![spark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/spark3-latest)
-![pyspark3](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark3-latest)
-![spark3-edge](https://img.shields.io/docker/v/bbenzikry/spark-eks/spark3-edge)
-![pyspark3-edge](https://img.shields.io/docker/v/bbenzikry/spark-eks/pyspark3-edge)
-![operator](https://img.shields.io/docker/v/bbenzikry/spark-eks/operator)
+![operator](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks-operator?style=plastic&label=operator)
+![spark2](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/spark2-latest?label=spark2)
+![pyspark2](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/pyspark2-latest?label=pyspark2)
+![spark3](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/spark3-latest?label=spark3)
+![pyspark3](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/pyspark3-latest?label=pyspark3)
+![spark3-edge](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/spark3-edge?label=spark3-edge)
+![pyspark3-edge](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/pyspark3-edge?label=pyspark3-edge)
 
 </center>
 
 ## Prerequisites
 
-- Deploy [spark-on-k8s operator](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator) using the [helm chart](https://github.com/helm/charts/tree/master/incubator/sparkoperator) or with [flux](./flux/releases/operator.yaml) using the [patched operator](https://github.com/bbenzikry/spark-on-k8s-operator/tree/hive-subpath) image.
+- Deploy [spark-on-k8s operator](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator) using the [helm chart](https://github.com/helm/charts/tree/master/incubator/sparkoperator) and the [patched operator](https://github.com/bbenzikry/spark-on-k8s-operator/tree/hive-subpath) image `bbenzikry/spark-eks-operator:latest`
 
-> Note: Do not create the spark service account automatically as part of chart use
+Suggested values for the helm chart can be found in the [flux](./flux/releases/operator.yaml) example.
+
+> Note: Do not create the spark service account automatically as part of chart use.
 
 ## using IAM roles for service accounts on EKS
 
@@ -42,10 +41,10 @@ Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore
 
 > [AWS docs on creating policies and roles](https://docs.aws.amazon.com/eks/latest/userguide/create-service-account-iam-policy-and-role.html)
 
-- Add default service account EKS role for executors in your spark job namespace
+- Add default service account EKS role for executors in your spark job namespace ( optional )
 
 ```yaml
-# NOTE: This is only required when not building spark from source or using a version of spark < 3.1. If using our edge docker images for spark3/pyspark3 you can skip this step
+# NOTE: Only required when not building spark from source or using a version of spark < 3.1. If you use our *-edge docker images for spark3/pyspark3 you can skip this step, as it will rely on the driver pod.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -60,6 +59,7 @@ metadata:
 
 ```yaml
 ## With the spark3 source builds, when this is configured and no executor role exists, executors default to this SA as well.
+# This is not recommended for production until a stable release is provided.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -77,19 +77,36 @@ metadata:
 
 - For pyspark, see [pyspark.Dockerfile](./docker/pyspark.Dockerfile)
 
+### Submit your spark application with IRSA support
+
+#### Select the right implementation for you
+
+> Below are examples for latest versions.
+>
+> If you want to use pinned versions, all images are tagged by the commit SHA.
+>
+> You can find a full list of tags [here](https://hub.docker.com/repository/docker/bbenzikry/spark-eks/tags)
+
 ```dockerfile
+# spark2
+FROM bbenzikry/spark-eks:spark2-latest
 # spark3
 FROM bbenzikry/spark-eks:spark3-latest
-# source build
-FROM bbenzikry/spark-eks:spark3-edge-latest
-# pyspark
-
+# source / master build
+FROM bbenzikry/spark-eks:spark3-edge
+# pyspark2
+FROM bbenzikry/spark-eks:pyspark2-latest
+# pyspark3
+FROM bbenzikry/spark-eks:pyspark3-latest
+# pyspark3-edge
+FROM bbenzikry/spark-eks:pyspark3-edge
 ```
 
-### Submit your spark application with IRSA support
+#### Submit your SparkApplication spec
 
 ```yaml
 hadoopConf:
+  # IRSA configuration
   "fs.s3a.aws.credentials.provider": "com.amazonaws.auth.WebIdentityTokenCredentialsProvider"
 driver:
   .....
@@ -104,7 +121,37 @@ driver:
 
 - Full example [here]()
 
-## Working with AWS Glue as metastore
+### Working with AWS Glue as metastore
+
+#### Prerequisites
+
+- Make sure your driver and executor roles have the relevant glue permissions
+
+```json
+{
+  /* Example below is an example configuration for accessing db1/table1. 
+  Modify this as you deem worthy for potential access. 
+  Last 3 resources must be present for your region.
+  */
+
+  "Effect": "Allow",
+  "Action": ["glue:*Database*", "glue:*Table*", "glue:*Partition*"],
+  "Resource": [
+    "arn:aws:glue:us-west-2:123456789012:catalog",
+    "arn:aws:glue:us-west-2:123456789012:database/db1",
+    "arn:aws:glue:us-west-2:123456789012:table/db1/table1",
+
+    "arn:aws:glue:eu-west-1:123456789012:database/default",
+    "arn:aws:glue:eu-west-1:123456789012:database/global_temp",
+    "arn:aws:glue:eu-west-1:123456789012:database/parquet"
+  ]
+}
+```
+
+- Make sure you are using the patched operator image
+- Add a config map to your spark job namespace as defined [here](conf/configmap.yaml)
+
+### Submitting your application
 
 ## Working with the spark history server on S3
 
