@@ -145,7 +145,21 @@ driver:
 - Make sure you are using the patched operator image
 - Add a config map to your spark job namespace as defined [here](conf/configmap.yaml)
 
-https://github.com/bbenzikry/spark-eks/blob/f9a41552fc855d04fbaf8f29dc8e4e88e3bb817a/conf/configmap.yaml#L1-L13
+```yaml
+apiVersion: v1
+data:
+  hive-site.xml: |-
+    <configuration>
+        <property>
+            <name>hive.imetastoreclient.factory.class</name>
+            <value>com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory</value>
+        </property>
+    </configuration>
+kind: ConfigMap
+metadata:
+  namespace: SPARK_JOB_NAMESPACE
+  name: spark-custom-config-map
+```
 
 ### Submitting your application
 
@@ -170,6 +184,6 @@ spec:
 
 - Where can I find a Spark 2 build with Glue support?
   - As spark 2 becomes less and less relevant, I opted against the need to add glue support.
-    You can take a look [here](https://github.com/bbenzikry/spark-glue/blob/main/build.sh) for a reference build script which you can use to build a Spark 2 distribution compatible which you can use with the Spark 2[dockerfile](./docker/spark2.Dockerfile)
+    You can take a look [here](https://github.com/bbenzikry/spark-glue/blob/main/build.sh) for a reference build script which you can use to build a Spark 2 distribution to use with the Spark 2 [dockerfile](./docker/spark2.Dockerfile)
 - Why a patched operator image?
   The patched image is a simple implementation for properly working with custom configuration files with the spark operator. It may be added as a PR in the future or another implementation will take its place. For more information, see the related issue https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/issues/216
