@@ -184,8 +184,8 @@ spec:
 
 - Where can I find a Spark 2 build with Glue support?
 
-As spark 2 becomes less and less relevant, I opted against the need to add glue support.
-  You can take a look [here](https://github.com/bbenzikry/spark-glue/blob/main/build.sh) for a reference build script which you can use to build a Spark 2 distribution to use with the Spark 2 [dockerfile](./docker/spark2.Dockerfile)
+  As spark 2 becomes less and less relevant, I opted against the need to add glue support.
+You can take a look [here](https://github.com/bbenzikry/spark-glue/blob/main/build.sh) for a reference build script which you can use to build a Spark 2 distribution to use with the Spark 2 [dockerfile](./docker/spark2.Dockerfile)
 - Why a patched operator image?
 
   The patched image is a simple implementation for properly working with custom configuration files with the spark operator. 
