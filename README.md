@@ -145,7 +145,7 @@ driver:
 - Make sure you are using the patched operator image
 - Add a config map to your spark job namespace as defined [here](conf/configmap.yaml)
 
-[```](https://github.com/bbenzikry/spark-eks/blob/eb0bc39d10b1ff774cac40732ab339dd6e33312c/conf/configmap.yaml#L1-L13)
+https://github.com/bbenzikry/spark-eks/blob/f9a41552fc855d04fbaf8f29dc8e4e88e3bb817a/conf/configmap.yaml#L1-L13
 
 ### Submitting your application
 
