@@ -1,4 +1,0 @@
-#!/bin/bash
-SOURCE_REF=$(git rev-parse --short HEAD)
-docker tag "$IMAGE_NAME" "$DOCKER_REPO:$SOURCE_REF"
-docker push "$DOCKER_REPO:$SOURCE_REF"

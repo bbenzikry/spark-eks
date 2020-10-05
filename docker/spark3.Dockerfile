@@ -1,79 +1,28 @@
-ARG java_image_tag=8-jre-slim
 ARG spark_uid=185
+FROM openjdk:8-jdk-slim AS builder
+LABEL maintainer="bbenzikry@gmail.com"
 
-ARG BUILD_DATE
-ARG VCS_REF
-
-FROM python:3.7-slim-buster as builder
 # Build options
-ARG spark_version=3.0.0
+ARG spark_version=3.0.1
 ARG scala_version=2.12
-# uncomment if you want the dev build
-# ARG spark_dev_version=v3.0.1-rc2
-# HIVE version for glue support
 ARG hive_version=2.3.7
-# Hadoop and SDK versions for IRSA support
 ARG hadoop_version=3.3.0
-# due to no substition
 ARG hadoop_major_version=3
 ARG aws_java_sdk_version=1.11.797
 ARG jmx_prometheus_javaagent_version=0.12.0
 
-# maven
-ENV MAVEN_VERSION=3.6.3
-ENV PATH=/opt/apache-maven-$MAVEN_VERSION/bin:$PATH
-
 WORKDIR /
 
-# JDK repo
-RUN echo "deb http://ftp.us.debian.org/debian sid main" >> /etc/apt/sources.list \
-  &&  apt-get update \
-  &&  mkdir -p /usr/share/man/man1
-
-# install deps
-RUN apt-get install -y git wget openjdk-8-jdk patch && rm -rf /var/cache/apt/*
-
-# maven
-RUN cd /opt \
-  &&  wget https://downloads.apache.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
-  &&  tar zxvf /opt/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
-  &&  rm apache-maven-${MAVEN_VERSION}-bin.tar.gz
-
-# Download JXM Prometheus javaagent jar
+# Download JMX Prometheus javaagent jar
 ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/${jmx_prometheus_javaagent_version}/jmx_prometheus_javaagent-${jmx_prometheus_javaagent_version}.jar /prometheus/
 RUN chmod 0644 prometheus/jmx_prometheus_javaagent*.jar
 
-# Glue support
-RUN git clone https://github.com/bbenzikry/aws-glue-data-catalog-client-for-apache-hive-metastore catalog
-ADD https://github.com/apache/hive/archive/rel/release-${hive_version}.tar.gz hive.tar.gz
-RUN mkdir hive && tar xzf hive.tar.gz --strip-components=1 -C hive 
-
-## Build patched hive
-WORKDIR /hive
-ADD https://issues.apache.org/jira/secure/attachment/12958418/HIVE-12679.branch-2.3.patch hive.patch
-RUN patch -p0 <hive.patch &&\
-  mvn clean install -DskipTests
-
-## Build glue hive client jars
-WORKDIR /catalog
-RUN mvn clean package -DskipTests -pl -aws-glue-datacatalog-hive2-client
-RUN mkdir /jars && find /catalog -name "*.jar" -exec cp {} /jars \;
-
-# Spark
-## Uncomment this for source/dev
-# RUN git clone https://github.com/apache/spark
-# ADD https://github.com/apache/spark/archive/${spark_dev_version}.tar.gz spark.tar.gz
-# RUN mkdir /spark && tar xzf spark.tar.gz --strip-components=1 -C /spark
-
 WORKDIR /
-ADD https://archive.apache.org/dist/spark/spark-${spark_version}/spark-${spark_version}-bin-without-hadoop.tgz .
-RUN tar -xvzf spark-${spark_version}-bin-without-hadoop.tgz
-RUN mv spark-${spark_version}-bin-without-hadoop spark
+# Get pre-compiled spark build
+ADD https://github.com/bbenzikry/spark-glue/releases/download/${spark_version}/spark-${spark_version}-bin-hadoop-provided-glue.tgz .
+RUN tar -xvzf spark-${spark_version}-bin-hadoop-provided-glue.tgz
+RUN mv spark-${spark_version}-bin-hadoop-provided-glue spark
 
-# Uncomment for source
-## WORKDIR /spark
-## RUN dev/make-distribution.sh --name custom-spark --pip -Pkubernetes -Phive -Phive-thriftserver -Phadoop-provided -Dhive.version=${hive_version}
-## WORKDIR /spark/opt
 
 # Hadoop
 ADD http://mirrors.whoishostingthis.com/apache/hadoop/common/hadoop-${hadoop_version}/hadoop-${hadoop_version}.tar.gz .
@@ -84,43 +33,36 @@ RUN mv hadoop-${hadoop_version} hadoop
 RUN rm -rf hadoop/share/doc
 
 WORKDIR /spark/jars
-# Copy patched hive jar to distro
-RUN cp /hive/ql/target/hive-exec-${hive_version}.jar .
-
-ADD https://repo1.maven.org/maven2/org/apache/spark/spark-hive_${scala_version}/${spark_version}/spark-hive_${scala_version}-${spark_version}.jar .
 
 # Add updated guava
-RUN rm -f guava-14.0.1.jar
+RUN rm -f jars/guava-14.0.1.jar
 ADD https://repo1.maven.org/maven2/com/google/guava/guava/23.0/guava-23.0.jar .
+
+# Hadoop-cloud for S3A commiters
+ADD https://github.com/bbenzikry/spark-glue/releases/download/${spark_version}/spark-hadoop-cloud_2.12-${spark_version}.jar .
 
 # Add GCS and BQ just in case
 ADD https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-latest-hadoop${hadoop_major_version}.jar .
-ADD https://storage.googleapis.com/spark-lib/bigquery/spark-bigquery-latest.jar .
+ADD https://storage.googleapis.com/spark-lib/bigquery/spark-bigquery-latest_2.12.jar .
+RUN chmod 0644 guava-23.0.jar spark-bigquery-latest_2.12.jar gcs-connector-latest-hadoop${hadoop_major_version}.jar spark-hadoop-cloud_2.12-${spark_version}.jar
 
-# chmods
-RUN chmod 0644 guava-23.0.jar spark-hive_${scala_version}-${spark_version}.jar spark-bigquery-latest.jar gcs-connector-latest-hadoop${hadoop_major_version}.jar
-
+# Updated AWS for IRSA
 WORKDIR /hadoop/share/hadoop/tools/lib
 RUN rm ./aws-java-sdk-bundle-*.jar
 ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${aws_java_sdk_version}/aws-java-sdk-bundle-${aws_java_sdk_version}.jar .
 RUN chmod 0644 aws-java-sdk-bundle*.jar
 
-
 FROM openjdk:8-jdk-slim as final
-LABEL maintainer="bbenzikry@gmail.com" \
-  org.label-schema.build-date=$BUILD_DATE \
-  org.label-schema.vcs-url="https://github.com/bbenzikry/spark-eks.git" \
-  org.label-schema.vcs-ref=$VCS_REF \
-  org.label-schema.schema-version="1.0.0"\
-  org.label-schema.version="0.0.1"
+LABEL org.opencontainers.image.created=$BUILD_DATE \
+  org.opencontainers.image.authors='bbenzikry@gmail.com' \
+  org.opencontainers.image.url='https://github.com/bbenzikry/spark-eks.git' \
+  org.opencontainers.image.version=$spark_version \
+  org.opencontainers.image.title="Spark ${spark_version} for EKS" \
+  org.opencontainers.image.description="Spark ${spark_version} built for working with AWS services"
 
 # Copy spark + glue + hadoop from builder stage
 COPY --from=builder /spark /opt/spark
-COPY --from=builder /jars/*.jar /opt/spark/jars/
 COPY --from=builder /spark/kubernetes/dockerfiles/spark/entrypoint.sh /opt
-
-# On master
-## COPY --from=builder /spark/dist/kubernetes/dockerfiles/spark/decom.sh /opt
 
 # Hadoop
 COPY --from=builder /hadoop /opt/hadoop
@@ -148,10 +90,9 @@ ENV SPARK_DIST_CLASSPATH="$HADOOP_HOME/etc/hadoop:$HADOOP_HOME/share/hadoop/comm
 ENV SPARK_EXTRA_CLASSPATH="$SPARK_DIST_CLASSPATH"
 ENV LD_LIBRARY_PATH /lib64
 
-
 WORKDIR /opt/spark/work-dir
 RUN chmod g+w /opt/spark/work-dir
-# RUN chmod a+x /opt/decom.sh
+# RUN chmod a+x /opt/decom.sh 
 
 ENTRYPOINT [ "/opt/entrypoint.sh" ]
 

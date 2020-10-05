@@ -1,0 +1,12 @@
+<!-- Reference for hive site configuration for use with glue -->
+<!-- For more references, see: https://github.com/awslabs/aws-glue-data-catalog-client-for-apache-hive-metastore-->
+<configuration>
+    <property>
+        <name>hive.imetastoreclient.factory.class</name>
+        <value>com.amazonaws.glue.catalog.metastore.AWSGlueDataCatalogHiveClientFactory</value>
+    </property>
+    <property>
+    <name>aws.region</name>
+    <value>us-east-1</value>
+    </property>
+</configuration>

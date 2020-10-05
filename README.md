@@ -8,7 +8,11 @@
 
 Examples and custom spark images for working with the spark-on-k8s operator on AWS.
 
-Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore
+Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore.
+
+Note: Spark 3 images also include relevant jars for working with the [S3A commiters](https://hadoop.apache.org/docs/r3.1.1/hadoop-aws/tools/hadoop-aws/committers.html)
+
+If you're looking for the Spark 3 custom distributions, you can find them [here](https://github.com/bbenzikry/spark-glue/releases)
 
 **Note**: Spark 2 images will not be updated, please see the [FAQ](#faq)
 
@@ -19,8 +23,6 @@ Allows using Spark 2 with IRSA and Spark 3 with IRSA and AWS Glue as a metastore
 ![pyspark2](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/pyspark2-latest?label=pyspark2)
 ![spark3](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/spark3-latest?label=spark3)
 ![pyspark3](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/pyspark3-latest?label=pyspark3)
-![spark3-edge](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/spark3-edge?label=spark3-edge)
-![pyspark3-edge](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/pyspark3-edge?label=pyspark3-edge)
 
 </center>
 
@@ -44,7 +46,7 @@ Suggested values for the helm chart can be found in the [flux](./flux/releases/o
 - Add default service account EKS role for executors in your spark job namespace ( optional )
 
 ```yaml
-# NOTE: Only required when not building spark from source or using a version of spark < 3.1. If you use our *-edge docker images for spark3/pyspark3 you can skip this step, as it will rely on the driver pod.
+# NOTE: Only required when not building spark from source or using a version of spark < 3.1. In 3.1, executor roles will rely on the driver definition. At the moment they execute with the default service account.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -55,25 +57,23 @@ metadata:
     eks.amazonaws.com/role-arn: "arn:aws:iam::ACCOUNT_ID:role/executor-role"
 ```
 
-- Make sure spark service account is configured to an EKS role as well
+- Make sure spark service account ( used by driver pods ) is configured to an EKS role as well
 
 ```yaml
-## With the spark3 source builds, when this is configured and no executor role exists, executors default to this SA as well.
-# This is not recommended for production until a stable release is provided.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: spark
   namespace: SPARK_JOB_NAMESPACE
   annotations:
-    eks.amazonaws.com/role-arn: "arn:aws:iam::ACCOUNT_ID:role/executor-role"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::ACCOUNT_ID:role/driver-role"
 ```
 
 ### Building a compatible image
 
 - For spark < 3.0.0, see [spark2.Dockerfile](./docker/spark2.Dockerfile) and [pyspark.Dockerfile](./docker/pyspark.Dockerfile)
 
-- For spark 3.0.0+, see [spark3.Dockerfile](./docker/spark3.Dockerfile) [spark3.edge.Dockerfile](docker/spark3.edge.Dockerfile)
+- For spark 3.0.0+, see [spark3.Dockerfile](./docker/spark3.Dockerfile)
 
 - For pyspark, see [pyspark.Dockerfile](./docker/pyspark.Dockerfile)
 
@@ -92,14 +92,10 @@ metadata:
 FROM bbenzikry/spark-eks:spark2-latest
 # spark3
 FROM bbenzikry/spark-eks:spark3-latest
-# source / master build
-FROM bbenzikry/spark-eks:spark3-edge
 # pyspark2
 FROM bbenzikry/spark-eks:pyspark2-latest
 # pyspark3
 FROM bbenzikry/spark-eks:pyspark3-latest
-# pyspark3-edge
-FROM bbenzikry/spark-eks:pyspark3-edge
 ```
 
 #### Submit your SparkApplication spec
@@ -119,46 +115,61 @@ driver:
     fsGroup: 65534
 ```
 
-- Full example [here]()
-
 ### Working with AWS Glue as metastore
 
-#### Prerequisites
+#### Glue Prerequisites
 
 - Make sure your driver and executor roles have the relevant glue permissions
 
-```json
+```json5
 {
-  /* Example below is an example configuration for accessing db1/table1. 
-  Modify this as you deem worthy for potential access. 
-  Last 3 resources must be present for your region.
+  /* 
+  Example below depicts the IAM policy for accessing db1/table1.
+  Modify this as you deem worthy for spark application access.
   */
 
-  "Effect": "Allow",
-  "Action": ["glue:*Database*", "glue:*Table*", "glue:*Partition*"],
-  "Resource": [
+  Effect: "Allow",
+  Action: ["glue:*Database*", "glue:*Table*", "glue:*Partition*"],
+  Resource: [
     "arn:aws:glue:us-west-2:123456789012:catalog",
     "arn:aws:glue:us-west-2:123456789012:database/db1",
     "arn:aws:glue:us-west-2:123456789012:table/db1/table1",
 
     "arn:aws:glue:eu-west-1:123456789012:database/default",
     "arn:aws:glue:eu-west-1:123456789012:database/global_temp",
-    "arn:aws:glue:eu-west-1:123456789012:database/parquet"
-  ]
+    "arn:aws:glue:eu-west-1:123456789012:database/parquet",
+  ],
 }
 ```
 
 - Make sure you are using the patched operator image
 - Add a config map to your spark job namespace as defined [here](conf/configmap.yaml)
 
+[```](https://github.com/bbenzikry/spark-eks/blob/eb0bc39d10b1ff774cac40732ab339dd6e33312c/conf/configmap.yaml#L1-L13)
+
 ### Submitting your application
 
+In order to submit an application with glue support, you need to add a reference to the configmap in your `SparkApplication` spec.
+
+```yaml
+kind: SparkApplication
+metadata:
+  name: "my-spark-app"
+  namespace: SPARK_JOB_NAMESPACE
+spec:
+  sparkConfigMap: spark-custom-config-map
+```
+
 ## Working with the spark history server on S3
+
+- Use the appropriate spark version and deploy the [helm](https://github.com/helm/charts/blob/master/stable/spark-history-server/) chart
+
+- Flux / Helm values reference [here](./flux/history.yaml)
 
 ## FAQ
 
 - Where can I find a Spark 2 build with Glue support?
   - As spark 2 becomes less and less relevant, I opted against the need to add glue support.
-    You can take a look [here](https://github.com/tinyclues/spark-glue-data-catalog/blob/master/build-spark.sh) for a reference implementation which you can add to the Spark 2 dockerfile [dockerfile](./docker/spark2.Dockerfile)
+    You can take a look [here](https://github.com/bbenzikry/spark-glue/blob/main/build.sh) for a reference build script which you can use to build a Spark 2 distribution compatible which you can use with the Spark 2[dockerfile](./docker/spark2.Dockerfile)
 - Why a patched operator image?
-  - Some PRs are still pending on the operator image. Once they are pushed through and properly tested, you can use them instead.
+  The patched image is a simple implementation for properly working with custom configuration files with the spark operator. It may be added as a PR in the future or another implementation will take its place. For more information, see the related issue https://github.com/GoogleCloudPlatform/spark-on-k8s-operator/issues/216

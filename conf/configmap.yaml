@@ -10,4 +10,4 @@ data:
 kind: ConfigMap
 metadata:
   namespace: SPARK_JOB_NAMESPACE
-  name: spark-config-map
+  name: spark-custom-config-map
