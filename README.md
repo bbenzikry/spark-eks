@@ -30,7 +30,7 @@ If you're looking for the Spark 3 custom distributions, you can find them [here]
 
 - Deploy [spark-on-k8s operator](https://github.com/GoogleCloudPlatform/spark-on-k8s-operator) using the [helm chart](https://github.com/helm/charts/tree/master/incubator/sparkoperator) and the [patched operator](https://github.com/bbenzikry/spark-on-k8s-operator/tree/hive-subpath) image `bbenzikry/spark-eks-operator:latest`
 
-Suggested values for the helm chart can be found in the [flux](./flux/releases/operator.yaml) example.
+Suggested values for the helm chart can be found in the [flux](./flux/operator.yaml) example.
 
 > Note: Do not create the spark service account automatically as part of chart use.
 

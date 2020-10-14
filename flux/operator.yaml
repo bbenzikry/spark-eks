@@ -1,0 +1,25 @@
+---
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: spark
+  namespace: spark-operator
+  annotations:
+    fluxcd.io/automated: "false"
+spec:
+  releaseName: spark-operator
+  chart:
+    repository: https://storage.googleapis.com/kubernetes-charts-incubator
+    name: sparkoperator
+    version: 0.8.2
+  values:
+    installCrds: true
+    # Remove below if you want to use the unpatched version. Note: this will remove the ability to add a custom configmap with hive config.
+    operatorImageName: bbenzikry/spark-eks-operator
+    operatorVersion: latest # or operator-SHA
+    sparkJobNamespace: spark-jobs
+    enableWebhook: true
+    serviceAccounts:
+      spark:
+        create: false
+        name: spark

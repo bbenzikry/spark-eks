@@ -1,0 +1,123 @@
+---
+apiVersion: helm.fluxcd.io/v1
+kind: HelmRelease
+metadata:
+  name: spark-history-server
+  namespace: SPARK_JOB_NAMESPACE
+  annotations:
+    fluxcd.io/automated: "false"
+spec:
+  releaseName: spark-history-server
+  chart:
+    repository: https://kubernetes-charts.storage.googleapis.com
+    name: spark-history-server
+    version: 1.2.1
+  values:
+    replicaCount: 1
+    nameOverride: ""
+    fullnameOverride: ""
+    rbac:
+      create: true
+    serviceAccount:
+      create: false
+      name: spark-history-server
+    image:
+      repository: bbenzikry/spark-eks
+      tag: 3
+      pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port:
+        number: 18080
+        name: http-historyport
+      annotations: {}
+
+    environment:
+    podAnnotations: {}
+
+    resources:
+      {}
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      #
+      # To let the application start up quickly give it a big limit
+      # limits:
+      #  cpu: 1000m
+      #  memory: 1Gi
+      # requests:
+      #  cpu: 100m
+      #  memory: 512Mi
+
+    ingress:
+      enabled: false
+      annotations: {}
+      path: /
+      hosts:
+        - spark-history-server.example.com
+      tls: []
+      #  - secretName:spark-history-server.example.com
+      #    hosts:
+      #      - spark-history-server.example.com
+
+    pvc:
+      # to use a file system path for Spark events dir, set 'enablePVC' to true and mention the
+      # name of an already created persistent volume claim in existingClaimName.
+      # The volume will be mounted on /data in the pod
+      enablePVC: false
+      existingClaimName: nfs-pvc
+      eventsDir: "/"
+
+    # Settings for the sub-chart
+    # When pvc.enablePVC is true, make sure:
+    # pvc.existingClaimName == nfs.pvcName
+    nfs:
+      enableExampleNFS: false
+      pvName: nfs-pv
+      pvcName: nfs-pvc
+
+    gcs:
+      enableGCS: false
+      secret: history-secrets
+      key: sparkonk8s.json
+      logDirectory: gs://spark-hs/
+
+    hdfs:
+      hdfsSiteConfigMap: hdfs-site
+      coreSiteConfigMap: core-site
+      logDirectory: hdfs://hdfs/history/
+      HADOOP_CONF_DIR: /etc/hadoop
+
+    s3:
+      enableS3: true
+      enableIAM: true
+      # Omit for IAM role-based or provider-based authentication.
+      # secret:
+      # accessKeyName is an AWS access key ID. Omit for IAM role-based or provider-based authentication.
+      # accessKeyName:
+      # secretKey is AWS secret key. Omit for IAM role-based or provider-based authentication.
+      # secretKeyName:
+      logDirectory: s3a://SPARK_HISTORY_BUCKET/
+      # custom s3 endpoint. Keep default for using aws s3 endpoint
+      endpoint: default
+
+    wasbs:
+      enableWASBS: false
+      sasKeyMode: true
+      secret: azure-secrets
+      sasKeyName: azure-blob-sas-key
+      storageAccountKeyName: azure-storage-account-key
+      storageAccountNameKeyName: azure-storage-account-name
+      containerKeyName: azure-blob-container-name
+      logDirectory: wasbs:///spark-hs
+
+    imagePullSecrets: []
+
+    nodeSelector:
+      # not on spot
+      node.kubernetes.io/lifecycle: normal
+
+    tolerations: []
+
+    affinity: {}
