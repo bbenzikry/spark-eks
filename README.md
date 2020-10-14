@@ -19,10 +19,8 @@ If you're looking for the Spark 3 custom distributions, you can find them [here]
 ---
 
 ![operator](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks-operator?style=plastic&label=operator)
-![spark2](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/spark2-latest?label=spark2)
-![pyspark2](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/pyspark2-latest?label=pyspark2)
-![spark3](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/spark3-latest?label=spark3)
-![pyspark3](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks/pyspark3-latest?label=pyspark3)
+![spark-eks](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks?style=plastic&label=spark-eks)
+
 
 </center>
 
