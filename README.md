@@ -18,8 +18,8 @@ If you're looking for the Spark 3 custom distributions, you can find them [here]
 
 ---
 
-![operator](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks-operator?style=plastic&label=operator)
-![spark-eks](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks?style=plastic&label=spark-eks)
+[![operator](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks-operator?style=plastic&label=operator)](https://hub.docker.com/r/bbenzikry/spark-eks-operator)
+[![spark-eks](https://img.shields.io/docker/cloud/build/bbenzikry/spark-eks?style=plastic&label=spark-eks)](https://hub.docker.com/r/bbenzikry/spark-eks)
 
 
 </center>
