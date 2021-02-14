@@ -109,7 +109,8 @@ driver:
   serviceAccount: SERVICE_ACCOUNT_NAME
 
   # See: https://github.com/kubernetes/kubernetes/issues/82573
-  securityContext:
+  # Note: securityContext has changed in recent versions of the operator to podSecurityContext
+  podSecurityContext:
     fsGroup: 65534
 ```
 
